@@ -1,0 +1,9 @@
+---
+- name: Install apache(httpd) on ubuntu/centos
+  hosts: webservers
+  become: yes
+  vars_files:
+    - /etc/ansible/playbooks/roles/apache/default/main.yml
+
+  roles:
+    - apache

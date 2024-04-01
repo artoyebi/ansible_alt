@@ -1,0 +1,51 @@
+---
+- name: Install Apache on Centos
+  yum:
+    name: httpd
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+  notify: restart apache
+
+- name: Install Apache on Ubuntu
+  apt:
+    name: apache2
+    state: present
+  when: ansible_facts['os_family'] == "Debian"
+  notify: restart apache
+
+- name: Install git on Centos
+  yum:
+    name: git
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Install git on Ubuntu
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Create clone destinantion directory
+  ansible.builtin.file:
+    path: "{{ clone_dest }}"
+    state: directory
+    mode: '0755'
+
+- name: Clone Git repository
+  git:
+    repo: "{{ git_url }}"
+    dest: "{{ clone_dest }}"
+
+- name: Move project files to apache default folder
+  ansible.builtin.copy:
+    src: "{{ clone_dest }}/{{ project_name }}"
+    dest: "{{ www_folder }}"
+    remote_src: true
+  notify: restart apache
+
+- name: Remove the original cloned directory
+  ansible.builtin.file:
+    path: "{{ clone_dest }}"
+    state: absent

@@ -1,0 +1,5 @@
+---
+git_url: "https://github.com/artoyebi/wp-pusher.git"
+clone_dest: "/tmp/project"
+www_folder: "/var/www/html"
+project_name: "wp-pusher"
