@@ -32,17 +32,37 @@
     path: "{{ clone_dest }}"
     state: directory
     mode: '0755'
+  become: yes
 
 - name: Clone Git repository
-  git:
+  ansible.builtin.git:
     repo: "{{ git_url }}"
     dest: "{{ clone_dest }}"
+    
+- name: Find all directories in the source
+  ansible.builtin.find:
+    paths: "{{ clone_dest }}"
+    file_type: directory
+  register: dirs_to_create
 
-- name: Move project files to apache default folder
+- name: Ensure each directory exists at the destination
+  ansible.builtin.file:
+    path: "{{ www_folder }}/{{ item.path | regex_replace('^' + clone_dest + '/', '') }}"
+    state: directory
+  loop: "{{ dirs_to_create.files }}"
+
+- name: Find all files in the source directory
+  ansible.builtin.find:
+    paths: "{{ clone_dest }}"
+    file_type: file
+  register: files_to_copy
+
+- name: Copy each file to the destination directory
   ansible.builtin.copy:
-    src: "{{ clone_dest }}/{{ project_name }}"
-    dest: "{{ www_folder }}"
-    remote_src: true
+    src: "{{ item.path }}"
+    dest: "{{ www_folder }}/{{ item.path | regex_replace('^' + clone_dest + '/', '') }}"
+    remote_src: yes
+  loop: "{{ files_to_copy.files }}"
   notify: restart apache
 
 - name: Remove the original cloned directory
